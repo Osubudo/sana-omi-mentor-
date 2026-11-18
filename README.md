@@ -27,3 +27,6 @@ This starter stores no messages, but sends supplied text to the configured model
 Before public deployment add authentication, HTTPS, rate limits, access controls,
 and consent safeguards for recorded conversations. Avoid submitting sensitive workplace
 or third-party recordings without authorization.
+
+## Private access
+Set `SANA_PRIVATE_TOKEN` to a long random secret in the deployment environment. Every `/mentor` request must include `Authorization: Bearer <your-secret>`. Do not commit or share either secret. This protects the endpoint from unauthenticated use, but the deployed service is still reachable on the public internet. Add rate limits and operational controls before continuous use.
