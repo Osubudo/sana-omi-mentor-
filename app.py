@@ -1,6 +1,7 @@
 """SANA Omi Mentor API."""
 import os
-from fastapi import FastAPI, HTTPException
+import secrets
+from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
 
@@ -27,7 +28,15 @@ class MentorResponse(BaseModel):
 async def health():
     return {"status": "ok"}
 
-@app.post("/mentor", response_model=MentorResponse)
+def require_private_token(authorization: str | None = Header(default=None)):
+    token = os.getenv("SANA_PRIVATE_TOKEN")
+    if not token:
+        raise HTTPException(status_code=503, detail="Private access not configured")
+    supplied = authorization.removeprefix("Bearer ").strip() if authorization else ""
+    if not secrets.compare_digest(supplied, token):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+@app.post("/mentor", response_model=MentorResponse, dependencies=[Depends(require_private_token)])
 async def mentor(req: MentorRequest):
     if not os.getenv("OPENAI_API_KEY"):
         raise HTTPException(status_code=503, detail="Model API key not configured")
